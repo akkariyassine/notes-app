@@ -26,18 +26,11 @@ export class DetailPage implements OnInit {
   }
 
   ngOnInit() {
-    // Get the id of the note from the URL
     let noteId = this.route.snapshot.paramMap.get("id");
 
-    // Check that the data is loaded before getting the note
-    // This handles the case where the detail page is loaded directly via the URL
-    if (this.notesService.loaded) {
-      this.note = this.notesService.getNote(noteId);
-    } else {
-      this.notesService.load().then(() => {
-        this.note = this.notesService.getNote(noteId);
-      });
-    }
+    this.notesService.getNote(noteId).subscribe(note => {
+      this.note = note;
+    });
   }
 
   noteChanged() {

@@ -1,17 +1,22 @@
 import { Injectable } from "@angular/core";
+import { Store } from "@ngrx/store";
 import { Storage } from "@ionic/storage";
 
+import { Observable } from "rxjs";
+
 import { Note } from "../interfaces/note";
+import * as NoteActions from "../actions/note.actions";
+import { AppState, getAllNotes, getNoteById } from "../reducers";
 
 @Injectable({
   providedIn: "root"
 })
 export class NotesService {
-  public notes: Note[] = [];
-  public loaded: boolean = false;
+  public notes: Observable<Note[]>;
 
-  constructor(private storage: Storage) {}
-
+  constructor(private storage: Storage, private store: Store<AppState>) {
+    this.notes = this.store.select(getAllNotes);
+  }
   load(): Promise<boolean> {
     // Return a promise so that we know when this operation has completed
     return new Promise(resolve => {
@@ -23,7 +28,6 @@ export class NotesService {
         }
 
         // This allows us to check if the data has been loaded in or not
-        this.loaded = true;
         resolve(true);
       });
     });
@@ -34,32 +38,27 @@ export class NotesService {
     this.storage.set("notes", this.notes);
   }
 
-  getNote(id): Note {
-    // Return the note that has an id matching the id passed in
-    return this.notes.find(note => note.id === id);
+  getNote(id: string): Observable<Note> {
+    return this.store.select(getNoteById, {
+      id: id
+    });
   }
 
   createNote(title): void {
-    // Create a unique id that is one larger than the current largest id
-    let id = Math.max(...this.notes.map(note => parseInt(note.id)), 0) + 1;
+    let id = Math.random()
+      .toString(36)
+      .substring(7);
 
-    this.notes.push({
+    let note = {
       id: id.toString(),
       title: title,
       content: ""
-    });
+    };
 
-    this.save();
+    this.store.dispatch(new NoteActions.CreateNote({ note: note }));
   }
 
   deleteNote(note): void {
-    // Get the index in the array of the note that was passed in
-    let index = this.notes.indexOf(note);
-
-    // Delete that element of the array and resave the data
-    if (index > -1) {
-      this.notes.splice(index, 1);
-      this.save();
-    }
+    this.store.dispatch(new NoteActions.DeleteNote({ note: note }));
   }
 }

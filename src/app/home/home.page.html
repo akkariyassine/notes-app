@@ -16,7 +16,7 @@
     <ion-item
       button
       detail
-      *ngFor="let note of notesService.notes"
+      *ngFor="let note of notesService.notes | async"
       [routerLink]="'/notes/' + note.id"
       routerDirection="forward"
     >
